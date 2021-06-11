@@ -1,5 +1,22 @@
+use std::f64;
+
+pub trait num {}
+
+impl num for u8 {}
+impl num for u16 {}
+impl num for u32 {}
+impl num for u64 {}
+impl num for u128 {}
+impl num for usize {}
+impl num for i8 {}
+impl num for i16 {}
+impl num for i32 {}
+impl num for i64 {}
+impl num for i128 {}
+impl num for isize {}
+
 //TODO: Generic data type
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Matrix {
     data: Vec<f64>,
     rows: usize,
@@ -29,35 +46,6 @@ impl Matrix {
         }
         let value = self.data[row * self.columns + column]; 
         value
-    }
-    //TODO: compare .shapes of matrices
-    fn add(a: &Matrix, b: &Matrix) -> Matrix {
-        if a.shape() != b.shape() {
-            panic!("Matrices to be added must be the same shape!");
-        }
-        let mut data = Vec::new();
-        for (index, a_value) in a.data.iter().enumerate() {
-            data.push(a_value + b.data[index]);
-        }
-        Matrix {
-            data,
-            rows: a.rows,
-            columns: a.columns
-        }
-    }
-    fn subtract(a: &Matrix, b: &Matrix) -> Matrix {
-        if a.shape() != b.shape() {
-            panic!("Matrices to be added must be the same shape!");
-        }
-        let mut data = Vec::new();
-        for (index, a_value) in a.data.iter().enumerate() {
-            data.push(a_value - b.data[index]);
-        }
-        Matrix {
-            data,
-            rows: a.rows,
-            columns: a.columns
-        }
     }
     fn multiply(a: &Matrix, b: &Matrix) -> Matrix {
         if a.shape().1 != b.shape().0 {
@@ -99,6 +87,102 @@ impl Matrix {
     }
 }
 
+impl std::ops::Add for Matrix {
+    type Output = Matrix;
+    fn add(self, b: Matrix) -> Matrix {
+        if self.shape() != b.shape() {
+            panic!("Matrices to be added must be the same shape!");
+        }
+        let mut data = Vec::new();
+        for (index, self_value) in self.data.iter().enumerate() {
+            data.push(self_value + b.data[index]);
+        }
+        Matrix {
+            data,
+            rows: self.rows,
+            columns: self.columns
+        }
+    }
+}
+
+impl std::ops::Add<f64> for Matrix {
+    type Output = Matrix;
+    fn add(self, b: f64) -> Matrix {
+        let mut data = Vec::new();
+        for self_value in self.data.iter() {
+            data.push(self_value + b);
+        }
+        Matrix {
+            data,
+            rows: self.rows,
+            columns: self.columns
+        }
+    }
+}
+
+impl std::ops::Add<Matrix> for f64 {
+    type Output = Matrix;
+    fn add(self, b: Matrix) -> Matrix {
+        let mut data = Vec::new();
+        for b_value in b.data.iter() {
+            data.push(self + b_value);
+        }
+        Matrix {
+            data,
+            rows: b.rows,
+            columns: b.columns
+        }
+    }
+}
+
+impl std::ops::Sub for Matrix {
+    type Output = Matrix;
+    fn sub(self, b: Matrix) -> Matrix {
+        if self.shape() != b.shape() {
+            panic!("Matrices to be subtracted must be the same shape!");
+        }
+        let mut data = Vec::new();
+        for (index, self_value) in self.data.iter().enumerate() {
+            data.push(self_value - b.data[index]);
+        }
+        Matrix {
+            data,
+            rows: self.rows,
+            columns: self.columns
+        }
+    }
+}
+
+impl std::ops::Sub<f64> for Matrix {
+    type Output = Matrix;
+    fn sub(self, b: f64) -> Matrix {
+        let mut data = Vec::new();
+        for self_value in self.data.iter() {
+            data.push(self_value - b);
+        }
+        Matrix {
+            data,
+            rows: self.rows,
+            columns: self.columns
+        }
+    }
+}
+
+impl std::ops::Sub<Matrix> for f64 {
+    type Output = Matrix;
+    fn sub(self, b: Matrix) -> Matrix {
+        let mut data = Vec::new();
+        for b_value in b.data.iter() {
+            data.push(self - b_value);
+        }
+        Matrix {
+            data,
+            rows: b.rows,
+            columns: b.columns
+        }
+    }
+}
+
 impl std::fmt::Display for Matrix {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut pretty_printed = Vec::new();
@@ -120,10 +204,8 @@ fn main() {
     println!("y: {}", y);
     println!("z: {}", z);
     // TODO: Implement {#} printing syntax
-    let sum = Matrix::add(&x, &y);
-    println!("x + y = {}", sum);
     println!("z transpose = {}", z.transpose());
     let multiplied = Matrix::multiply(&x, &z);
     println!("{}", multiplied);
-    println!("{}", Matrix::dot_product(&vec![3.0, 4.0, 5.0], &vec![7.0, 8.0, 9.0]))
+    println!("{}", Matrix::dot_product(&vec![3.0, 4.0, 5.0], &vec![7.0, 8.0, 9.0]));
 }
