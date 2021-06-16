@@ -1,19 +1,5 @@
 use std::f64;
-
-pub trait num {}
-
-impl num for u8 {}
-impl num for u16 {}
-impl num for u32 {}
-impl num for u64 {}
-impl num for u128 {}
-impl num for usize {}
-impl num for i8 {}
-impl num for i16 {}
-impl num for i32 {}
-impl num for i64 {}
-impl num for i128 {}
-impl num for isize {}
+use num_traits::cast::ToPrimitive;
 
 //TODO: Generic data type
 #[derive(Debug, Clone)]
@@ -24,7 +10,7 @@ struct Matrix {
 }
 
 impl Matrix {
-    fn new(raw_data: Vec<Vec<f64>>) -> Matrix {
+    fn new<T: ToPrimitive>(raw_data: Vec<Vec<T>>) -> Matrix {
         let rows = raw_data.len();
         let columns = raw_data[0].len();
         let mut data: Vec<f64> = Vec::new();
@@ -32,7 +18,7 @@ impl Matrix {
             if test_row.len() != columns {
                 panic!("Please input a uniform matrix!");
             }
-            data.extend(test_row);
+            data.extend(test_row.iter().map(|value| value.to_f64().unwrap()));
         }
         Matrix {
             data,
@@ -105,12 +91,12 @@ impl std::ops::Add for Matrix {
     }
 }
 
-impl std::ops::Add<f64> for Matrix {
+impl<T: ToPrimitive> std::ops::Add<T> for Matrix {
     type Output = Matrix;
-    fn add(self, b: f64) -> Matrix {
+    fn add(self, b: T) -> Matrix {
         let mut data = Vec::new();
         for self_value in self.data.iter() {
-            data.push(self_value + b);
+            data.push(self_value + b.to_f64().unwrap());
         }
         Matrix {
             data,
@@ -119,13 +105,16 @@ impl std::ops::Add<f64> for Matrix {
         }
     }
 }
-
-impl std::ops::Add<Matrix> for f64 {
+/*
+struct WrapperForNumber<T> {
+    number: T
+}*/
+impl<T: ToPrimitive> std::ops::Add<Matrix> for T {
     type Output = Matrix;
     fn add(self, b: Matrix) -> Matrix {
         let mut data = Vec::new();
         for b_value in b.data.iter() {
-            data.push(self + b_value);
+            data.push(self.number.to_f64().unwrap() + b_value);
         }
         Matrix {
             data,
@@ -196,7 +185,7 @@ impl std::fmt::Display for Matrix {
 fn main() {
     let x: Vec<Vec<f64>> = vec![vec![1.0, 2.0], vec![3.0, 4.0], vec![5.0, 6.0]];
     let y: Vec<Vec<f64>> = vec![vec![11.0, 12.0], vec![13.0, 14.0], vec![15.0, 16.0]];
-    let z: Vec<Vec<f64>> = vec![vec![11.0, 12.0, 13.0], vec![14.0, 15.0, 16.0]];
+    let z: Vec<Vec<i16>> = vec![vec![11, 12, 13], vec![14, 15, 16]];
     let x = Matrix::new(x);
     let y = Matrix::new(y);
     let z = Matrix::new(z);
@@ -204,8 +193,10 @@ fn main() {
     println!("y: {}", y);
     println!("z: {}", z);
     // TODO: Implement {#} printing syntax
+    // TODO: consume values rather than take as reference
     println!("z transpose = {}", z.transpose());
     let multiplied = Matrix::multiply(&x, &z);
-    println!("{}", multiplied);
+    println!("x * z = {}", multiplied);
     println!("{}", Matrix::dot_product(&vec![3.0, 4.0, 5.0], &vec![7.0, 8.0, 9.0]));
+    println!("x + 3 = {}", x + 3);
 }
